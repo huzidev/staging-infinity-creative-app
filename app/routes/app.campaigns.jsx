@@ -1,6 +1,22 @@
+import {
+  Page,
+  Layout,
+  Card,
+  Text,
+  Button,
+  InlineStack,
+  BlockStack,
+  Badge,
+  ResourceList,
+  ResourceItem,
+  Thumbnail,
+  DescriptionList,
+  EmptyState,
+} from "@shopify/polaris";
 import { useState } from "react";
 import { useLoaderData, useFetcher } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import { useNavigate } from "react-router";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
@@ -46,53 +62,54 @@ export default function Campaigns() {
   const { campaigns } = useLoaderData();
   const fetcher = useFetcher();
   const shopify = useAppBridge();
+  const navigate = useNavigate();
   const [selectedCampaign, setSelectedCampaign] = useState(null);
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      DRAFT: { status: "info", children: "Draft" },
-      ACTIVE: { status: "success", children: "Active" },
-      PAUSED: { status: "warning", children: "Paused" },
-      COMPLETED: { status: "success", children: "Completed" },
-      ARCHIVED: { status: "subdued", children: "Archived" }
+      DRAFT: { tone: "info", children: "Draft" },
+      ACTIVE: { tone: "success", children: "Active" },
+      PAUSED: { tone: "warning", children: "Paused" },
+      COMPLETED: { tone: "success", children: "Completed" },
+      ARCHIVED: { tone: "subdued", children: "Archived" }
     };
     return statusConfig[status] || statusConfig.DRAFT;
   };
 
   const getAssetStatusBadge = (status) => {
     const statusConfig = {
-      PENDING: { status: "info", children: "Pending" },
-      PROCESSING: { status: "warning", children: "Processing" },
-      COMPLETED: { status: "success", children: "Ready" },
-      FAILED: { status: "critical", children: "Failed" }
+      PENDING: { tone: "info", children: "Pending" },
+      PROCESSING: { tone: "warning", children: "Processing" },
+      COMPLETED: { tone: "success", children: "Ready" },
+      FAILED: { tone: "critical", children: "Failed" }
     };
     return statusConfig[status] || statusConfig.PENDING;
   };
 
   return (
-    <s-page 
-      heading="Ad Campaigns" 
+    <Page 
+      title="Ad Campaigns" 
       subtitle="Manage your AI-generated advertising content"
       primaryAction={{
         content: "Create New Campaign",
-        url: "/app"
+        onAction: () => navigate("/app")
       }}
     >
-      <s-layout>
-        <s-layout-section>
+      <Layout>
+        <Layout.Section>
           {campaigns.length === 0 ? (
-            <s-empty-state
+            <EmptyState
               heading="No campaigns yet"
               body="Create your first AI-generated ad campaign to get started."
               action={{
                 content: "Create Campaign",
-                url: "/app"
+                onAction: () => navigate("/app")
               }}
               image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
             />
           ) : (
-            <s-card>
-              <s-resource-list
+            <Card>
+              <ResourceList
                 items={campaigns.map((campaign) => ({
                   id: campaign.id,
                   name: campaign.name,
@@ -103,98 +120,100 @@ export default function Campaigns() {
                   thumbnail: campaign.product?.images?.[0]?.url
                 }))}
                 renderItem={(campaign) => (
-                  <s-resource-item 
+                  <ResourceItem
                     id={campaign.id}
                     onClick={() => setSelectedCampaign(campaigns.find(c => c.id === campaign.id))}
                   >
-                    <s-stack direction="inline" gap="base" alignment="center">
+                    <InlineStack gap="300" blockAlign="center">
                       {campaign.thumbnail && (
-                        <s-thumbnail 
+                        <Thumbnail 
                           source={campaign.thumbnail} 
                           alt={campaign.productTitle}
                           size="large"
                         />
                       )}
-                      <s-stack direction="block" gap="tight" fill>
-                        <s-stack direction="inline" gap="base" alignment="center">
-                          <s-text variant="headingSm">{campaign.name}</s-text>
-                          <s-badge {...getStatusBadge(campaign.status)} />
-                        </s-stack>
-                        <s-text variant="bodySm" color="subdued">
+                      <BlockStack gap="200" inlineAlign="start">
+                        <InlineStack gap="200" blockAlign="center">
+                          <Text variant="headingSm" as="h3">{campaign.name}</Text>
+                          <Badge {...getStatusBadge(campaign.status)} />
+                        </InlineStack>
+                        <Text tone="subdued">
                           {campaign.productTitle} • {campaign.assetCount} assets
-                        </s-text>
-                        <s-text variant="bodySm" color="subdued">
+                        </Text>
+                        <Text tone="subdued">
                           Created {new Date(campaign.createdAt).toLocaleDateString()}
-                        </s-text>
-                      </s-stack>
-                    </s-stack>
-                  </s-resource-item>
+                        </Text>
+                      </BlockStack>
+                    </InlineStack>
+                  </ResourceItem>
                 )}
               />
-            </s-card>
+            </Card>
           )}
-        </s-layout-section>
+        </Layout.Section>
 
         {selectedCampaign && (
-          <s-layout-section secondary>
-            <s-card sectioned>
-              <s-stack direction="block" gap="base">
-                <s-stack direction="inline" alignment="center" gap="base">
-                  <s-heading variant="headingMd">{selectedCampaign.name}</s-heading>
-                  <s-badge {...getStatusBadge(selectedCampaign.status)} />
-                </s-stack>
+          <Layout.Section secondary>
+            <Card padding="400">
+              <BlockStack gap="300">
+                <InlineStack blockAlign="center" gap="200">
+                  <Text variant="headingMd" as="h2">{selectedCampaign.name}</Text>
+                  <Badge {...getStatusBadge(selectedCampaign.status)} />
+                </InlineStack>
                 
-                <s-description-list>
-                  <s-description-list-item
-                    term="Product"
-                    description={selectedCampaign.product?.title}
-                  />
-                  <s-description-list-item
-                    term="Assets"
-                    description={`${selectedCampaign.adAssets?.length || 0} generated`}
-                  />
-                  <s-description-list-item
-                    term="Created"
-                    description={new Date(selectedCampaign.createdAt).toLocaleDateString()}
-                  />
-                </s-description-list>
+                <DescriptionList
+                  items={[
+                    {
+                      term: "Product",
+                      description: selectedCampaign.product?.title
+                    },
+                    {
+                      term: "Assets",
+                      description: `${selectedCampaign.adAssets?.length || 0} generated`
+                    },
+                    {
+                      term: "Created",
+                      description: new Date(selectedCampaign.createdAt).toLocaleDateString()
+                    }
+                  ]}
+                />
 
                 {selectedCampaign.adAssets?.length > 0 && (
-                  <s-stack direction="block" gap="base">
-                    <s-text variant="headingSm">Generated Assets</s-text>
+                  <BlockStack gap="300">
+                    <Text variant="headingSm" as="h3">Generated Assets</Text>
                     {selectedCampaign.adAssets.map((asset) => (
-                      <s-card key={asset.id} sectioned>
-                        <s-stack direction="inline" gap="base" alignment="center">
-                          <s-stack direction="block" gap="tight" fill>
-                            <s-stack direction="inline" gap="base" alignment="center">
-                              <s-text variant="bodyMd">
+                      <Card key={asset.id} padding="300">
+                        <InlineStack gap="300" blockAlign="center">
+                          <BlockStack gap="200" inlineAlign="start">
+                            <InlineStack gap="200" blockAlign="center">
+                              <Text variant="bodyMd">
                                 {asset.assetType.replace('_', ' to ')}
-                              </s-text>
-                              <s-badge {...getAssetStatusBadge(asset.status)} />
-                            </s-stack>
-                            <s-text variant="bodySm" color="subdued">
+                              </Text>
+                              <Badge {...getAssetStatusBadge(asset.status)} />
+                            </InlineStack>
+                            <Text tone="subdued">
                               Generated {new Date(asset.createdAt).toLocaleDateString()}
-                            </s-text>
-                          </s-stack>
+                            </Text>
+                          </BlockStack>
                           {asset.generatedUrl && asset.status === "COMPLETED" && (
-                            <s-button
+                            <Button
                               variant="primary"
                               size="slim"
                               onClick={() => window.open(asset.generatedUrl, '_blank')}
                             >
                               View
-                            </s-button>
+                            </Button>
                           )}
-                        </s-stack>
-                      </s-card>
+                        </InlineStack>
+                      </Card>
                     ))}
-                  </s-stack>
+                  </BlockStack>
                 )}
-              </s-stack>
-            </s-card>
-          </s-layout-section>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
         )}
-      </s-layout>
-    </s-page>
+      </Layout>
+    </Page>
   );
 }

@@ -12,6 +12,7 @@ import {
 } from "@shopify/polaris";
 import { ImageIcon, PlayIcon, MagicIcon } from "@shopify/polaris-icons";
 import { useAppBridge } from "@shopify/app-bridge-react";
+import { useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 
@@ -22,9 +23,14 @@ export const loader = async ({ request }) => {
 
 export default function Index() {
   const shopify = useAppBridge();
+  const navigate = useNavigate();
 
   const navigateToCampaigns = () => {
-    window.location.href = "/app/campaigns";
+    navigate("/app/campaigns");
+  };
+
+  const navigateToAdditional = () => {
+    navigate("/app/additional");
   };
 
   const showToast = (message) => {
@@ -133,16 +139,13 @@ export default function Index() {
                 Navigation
               </Text>
               <BlockStack gap="200">
-                <Button fullWidth onClick={() => (window.location.href = "/app")}>
+                <Button fullWidth onClick={() => navigate("/app")}>
                   Dashboard
                 </Button>
                 <Button fullWidth onClick={navigateToCampaigns}>
                   Campaigns
                 </Button>
-                <Button
-                  fullWidth
-                  onClick={() => (window.location.href = "/app/additional")}
-                >
+                <Button fullWidth onClick={navigateToAdditional}>
                   Additional Page
                 </Button>
               </BlockStack>
