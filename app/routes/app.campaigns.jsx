@@ -92,7 +92,7 @@ export default function Campaigns() {
       subtitle="Manage your AI-generated advertising content"
       primaryAction={{
         content: "Create New Campaign",
-        onAction: () => navigate("/app")
+        onAction: () => navigate("/app/campaigns/new")
       }}
     >
       <Layout>
@@ -100,10 +100,10 @@ export default function Campaigns() {
           {campaigns.length === 0 ? (
             <EmptyState
               heading="No campaigns yet"
-              body="Create your first AI-generated ad campaign to get started."
+              body="Create your first AI-generated ad campaign with image-to-image and image-to-video generation to get started."
               action={{
                 content: "Create Campaign",
-                onAction: () => navigate("/app")
+                onAction: () => navigate("/app/ad/new")
               }}
               image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
             />

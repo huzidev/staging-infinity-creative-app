@@ -6,38 +6,41 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   
   try {
-    const adData = JSON.parse(formData.get("adData"));
+    // Handle both old and new form data formats
+    let adData;
+    if (formData.get("adData")) {
+      // Old format - JSON string
+      adData = JSON.parse(formData.get("adData"));
+    } else {
+      // New format - direct form fields
+      adData = {
+        productId: formData.get("productId"),
+        imageUrl: formData.get("imageUrl"),
+        adType: formData.get("adType"),
+        prompt: formData.get("prompt"),
+        config: formData.get("config") ? JSON.parse(formData.get("config")) : {}
+      };
+    }
     
     const {
-      campaignName,
       productId,
-      imageId,
+      imageUrl,
       adType,
       prompt,
       config
     } = adData;
 
-    // TODO: Save campaign to database
-    // const campaign = await prisma.adCampaign.create({
-    //   data: {
-    //     name: campaignName,
-    //     productId: productId,
-    //     shop: session.shop,
-    //     status: "ACTIVE"
-    //   }
-    // });
-
-    // Extract image URL from the adData
-    // In production, you would fetch the actual image URL from your database
-    // using the imageId to look up the ProductImage record
-    const imageUrl = adData.sourceImageUrl || `https://via.placeholder.com/800x600`; // Fallback placeholder
+    // Use the provided imageUrl or fallback
+    const sourceImageUrl = imageUrl || adData.sourceImageUrl || `https://via.placeholder.com/800x600`;
 
     let result;
     
     if (adType === "IMAGE_TO_IMAGE") {
-      result = await googleAI.generateImageFromImage(imageUrl, prompt);
+      result = await googleAI.generateImageFromImage(sourceImageUrl, prompt);
     } else if (adType === "IMAGE_TO_VIDEO") {
-      result = await googleAI.generateVideoFromImage(imageUrl, prompt);
+      result = await googleAI.generateVideoFromImage(sourceImageUrl, prompt);
+    } else {
+      throw new Error(`Unsupported ad type: ${adType}`);
     }
 
     if (result.success) {
@@ -45,36 +48,38 @@ export const action = async ({ request }) => {
       // await prisma.adAsset.create({
       //   data: {
       //     campaignId: campaign.id,
-      //     sourceImageId: imageId,
+      //     sourceImageUrl: sourceImageUrl,
       //     assetType: adType,
       //     status: "COMPLETED",
       //     prompt: prompt,
       //     generatedUrl: result.imageUrl || result.videoUrl,
       //     thumbnailUrl: result.thumbnailUrl,
       //     fileSize: result.imageData ? Buffer.byteLength(result.imageData, 'base64') : null,
-      //     mimeType: adType === "IMAGE_TO_VIDEO" ? "video/mp4" : "image/png"
+      //     mimeType: adType === "IMAGE_TO_VIDEO" ? "video/mp4" : "image/png",
+      //     config: config
       //   }
       // });
 
       return Response.json({
         success: true,
-        message: "Ad generation completed successfully!",
+        message: `${adType === "IMAGE_TO_VIDEO" ? "Video" : "Image"} generation completed successfully!`,
         assetUrl: result.imageUrl || result.videoUrl,
         thumbnailUrl: result.thumbnailUrl,
         textResponse: result.textResponse,
-        filename: result.filename
+        filename: result.filename,
+        adType: adType
       });
     } else {
       return Response.json({
         success: false,
-        error: result.error
+        error: result.error || "Generation failed"
       }, { status: 500 });
     }
   } catch (error) {
     console.error("Error in ad generation:", error);
     return Response.json({
       success: false,
-      error: "Failed to start ad generation"
+      error: error.message || "Failed to start ad generation"
     }, { status: 500 });
   }
 };

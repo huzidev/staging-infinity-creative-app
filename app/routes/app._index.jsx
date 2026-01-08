@@ -55,7 +55,7 @@ export default function Index() {
               </Text>
 
               <InlineStack gap="200">
-                <Button primary onClick={() => showToast("Coming soon!")}
+                <Button primary onClick={() => navigate("/app/campaigns/new")}
                 >
                   Create New Campaign
                 </Button>

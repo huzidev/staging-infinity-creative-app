@@ -1,123 +1,166 @@
+import {
+  Card,
+  Text,
+  BlockStack,
+  InlineStack,
+  Button,
+  ButtonGroup,
+  Thumbnail,
+  EmptyState,
+  Grid,
+} from "@shopify/polaris";
 import { useState } from "react";
 
-export function ImageSelector({ images, onImageSelect, selectedImage }) {
+export function ImageSelector({ product, selectedImage, onImageSelect }) {
   const [viewMode, setViewMode] = useState("grid"); // grid or list
+  
+  // Handle both REST API and GraphQL data structures
+  const images = product?.images?.nodes || product?.images || [];
 
   if (!images || images.length === 0) {
     return (
-      <s-empty-state
-        heading="No images available"
-        body="This product doesn't have any images. Please select a different product with images."
-        image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-      />
+      <Card>
+        <EmptyState
+          heading="No images available"
+          body="This product doesn't have any images. Please select a different product with images."
+          image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+        />
+      </Card>
     );
   }
 
   return (
-    <div className="image-selector">
-      <s-stack direction="inline" alignment="center" gap="base">
-        <s-heading variant="headingMd">Select Product Image</s-heading>
-        <s-button-group>
-          <s-button
-            pressed={viewMode === "grid"}
-            onClick={() => setViewMode("grid")}
-            size="slim"
-          >
-            Grid
-          </s-button>
-          <s-button
-            pressed={viewMode === "list"}
-            onClick={() => setViewMode("list")}
-            size="slim"
-          >
-            List
-          </s-button>
-        </s-button-group>
-      </s-stack>
+    <Card>
+      <BlockStack gap="300">
+        <InlineStack gap="200" align="space-between">
+          <Text variant="headingMd" as="h2">
+            Select Product Image
+          </Text>
+          <ButtonGroup>
+            <Button
+              pressed={viewMode === "grid"}
+              onClick={() => setViewMode("grid")}
+              size="slim"
+            >
+              Grid
+            </Button>
+            <Button
+              pressed={viewMode === "list"}
+              onClick={() => setViewMode("list")}
+              size="slim"
+            >
+              List
+            </Button>
+          </ButtonGroup>
+        </InlineStack>
 
-      <div className={`image-grid ${viewMode}`}>
         {viewMode === "grid" ? (
           <div style={{ 
             display: "grid", 
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", 
-            gap: "1rem",
-            marginTop: "1rem"
+            gap: "1rem"
           }}>
-            {images.map((image) => (
-              <s-card key={image.id} sectioned>
-                <s-stack direction="block" gap="base">
-                  <div 
-                    style={{ 
-                      position: "relative",
-                      cursor: "pointer",
-                      border: selectedImage?.id === image.id ? "2px solid #008060" : "1px solid #e1e3e5",
-                      borderRadius: "4px",
-                      padding: "4px"
-                    }}
-                    onClick={() => onImageSelect(image)}
-                  >
-                    <img
-                      src={image.url}
-                      alt={image.altText || "Product image"}
-                      style={{
-                        width: "100%",
-                        height: "160px",
-                        objectFit: "cover",
-                        borderRadius: "4px"
+            {images.map((image) => {
+              const isSelected = selectedImage?.id === image.id || selectedImage?.url === image.url;
+              return (
+                <Card key={image.id} background={isSelected ? "bg-surface-selected" : "bg-surface"}>
+                  <BlockStack gap="200">
+                    <div 
+                      style={{ 
+                        cursor: "pointer", 
+                        border: isSelected ? "2px solid var(--p-color-border-brand)" : "1px solid var(--p-color-border)",
+                        borderRadius: "var(--p-border-radius-200)",
+                        overflow: "hidden"
                       }}
-                    />
-                    {selectedImage?.id === image.id && (
-                      <div style={{
-                        position: "absolute",
-                        top: "8px",
-                        right: "8px",
-                        background: "#008060",
-                        borderRadius: "50%",
-                        width: "24px",
-                        height: "24px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}>
-                        <s-icon source="check" color="white" />
-                      </div>
-                    )}
-                  </div>
-                  <s-text variant="captionMd" alignment="center">
-                    {image.width}×{image.height}
-                  </s-text>
-                </s-stack>
-              </s-card>
-            ))}
+                      onClick={() => onImageSelect(image)}
+                    >
+                      <img 
+                        src={image.url} 
+                        alt={image.altText || "Product image"}
+                        style={{ 
+                          width: "100%", 
+                          height: "150px", 
+                          objectFit: "cover", 
+                          display: "block" 
+                        }}
+                      />
+                    </div>
+                    <BlockStack gap="100">
+                      <Text variant="bodySm" tone="subdued">
+                        {image.width}x{image.height}px
+                      </Text>
+                      {image.altText && (
+                        <Text variant="bodySm" tone="subdued" truncate>
+                          {image.altText}
+                        </Text>
+                      )}
+                      <Button
+                        fullWidth
+                        variant={isSelected ? "primary" : "secondary"}
+                        onClick={() => onImageSelect(image)}
+                        size="slim"
+                      >
+                        {isSelected ? "Selected" : "Select"}
+                      </Button>
+                    </BlockStack>
+                  </BlockStack>
+                </Card>
+              );
+            })}
           </div>
         ) : (
-          <s-resource-list
-            items={images.map((image) => ({
-              id: image.id,
-              url: image.url,
-              name: image.altText || `Image ${image.position || 1}`,
-              dimensions: `${image.width}×${image.height}`
-            }))}
-            renderItem={(image) => (
-              <s-resource-item
-                id={image.id}
-                onClick={() => onImageSelect(images.find(img => img.id === image.id))}
-              >
-                <s-stack direction="inline" gap="base" alignment="center">
-                  <s-thumbnail source={image.url} alt={image.name} size="large" />
-                  <s-stack direction="block" gap="tight">
-                    <s-text variant="bodyMd">{image.name}</s-text>
-                    <s-text variant="bodySm" color="subdued">{image.dimensions}</s-text>
-                  </s-stack>
-                  {selectedImage?.id === image.id && (
-                    <s-icon source="check" color="success" />
-                  )}
-                </s-stack>
-              </s-resource-item>
-            )}
-          />
+          <BlockStack gap="200">
+            {images.map((image) => {
+              const isSelected = selectedImage?.id === image.id || selectedImage?.url === image.url;
+              return (
+                <Card key={image.id} background={isSelected ? "bg-surface-selected" : "bg-surface"}>
+                  <InlineStack gap="300" align="start">
+                    <Thumbnail
+                      source={image.url}
+                      alt={image.altText || "Product image"}
+                      size="large"
+                    />
+                    <BlockStack gap="200">
+                      <Text variant="headingSm">
+                        {image.altText || "Product Image"}
+                      </Text>
+                      <Text variant="bodySm" tone="subdued">
+                        Dimensions: {image.width}x{image.height}px
+                      </Text>
+                      <Button
+                        variant={isSelected ? "primary" : "secondary"}
+                        onClick={() => onImageSelect(image)}
+                        size="slim"
+                      >
+                        {isSelected ? "Selected" : "Select Image"}
+                      </Button>
+                    </BlockStack>
+                  </InlineStack>
+                </Card>
+              );
+            })}
+          </BlockStack>
         )}
-      </div>
-    </div>
+        
+        {selectedImage && (
+          <Card background="bg-surface-secondary">
+            <BlockStack gap="200">
+              <Text variant="headingSm">Selected Image</Text>
+              <InlineStack gap="200" align="start">
+                <Thumbnail
+                  source={selectedImage.url}
+                  alt={selectedImage.altText || "Selected image"}
+                  size="large"
+                />
+                <BlockStack gap="100">
+                  <Text>{selectedImage.altText || "Product Image"}</Text>
+                  <Text tone="subdued">{selectedImage.width}x{selectedImage.height}px</Text>
+                </BlockStack>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        )}
+      </BlockStack>
+    </Card>
   );
 }

@@ -1,9 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { useFetcher } from "react-router";
+import {
+  Card,
+  Text,
+  BlockStack,
+  TextField,
+  Thumbnail,
+  InlineStack,
+  Listbox,
+  Popover,
+  ActionList,
+} from "@shopify/polaris";
 
-export function ProductSelector({ onProductSelect, selectedProduct }) {
+export function ProductSelector({ onProductSelect, selectedProduct, products }) {
   const fetcher = useFetcher();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const loadProducts = useCallback(() => {
@@ -17,57 +29,90 @@ export function ProductSelector({ onProductSelect, selectedProduct }) {
     return () => clearTimeout(timeoutId);
   }, [loadProducts]);
 
-  const products = fetcher.data?.products || [];
+  useEffect(() => {
+    // Use either fetched products or passed products
+    const productsList = fetcher.data?.products || products || [];
+    setFilteredProducts(productsList);
+  }, [fetcher.data, products]);
 
   const handleProductSelect = (product) => {
     onProductSelect(product);
+    setSearchTerm(product.title);
     setIsOpen(false);
   };
 
+  const textFieldActivator = (
+    <TextField
+      label="Search products"
+      value={searchTerm}
+      onChange={(value) => {
+        setSearchTerm(value);
+        setIsOpen(true);
+      }}
+      placeholder="Type to search products..."
+      autoComplete="off"
+      onFocus={() => setIsOpen(true)}
+    />
+  );
+
   return (
-    <div className="product-selector">
-      <s-autocomplete
-        label="Search and select a product"
-        value={selectedProduct?.title || ""}
-        options={products.map(product => ({
-          value: product.id,
-          label: product.title,
-          prefix: product.images?.[0] && (
-            <s-thumbnail
-              source={product.images[0].url}
-              alt={product.images[0].altText || product.title}
-              size="small"
-            />
-          )
-        }))}
-        onSelect={(value) => {
-          const product = products.find(p => p.id === value);
-          if (product) handleProductSelect(product);
-        }}
-        onFocus={() => setIsOpen(true)}
-        placeholder="Type to search products..."
-        loading={fetcher.state === "loading"}
-      />
-      
-      {selectedProduct && (
-        <s-card sectioned>
-          <s-stack direction="inline" gap="base" alignment="center">
-            {selectedProduct.images?.[0] && (
-              <s-thumbnail
-                source={selectedProduct.images[0].url}
-                alt={selectedProduct.images[0].altText || selectedProduct.title}
-                size="medium"
-              />
-            )}
-            <s-stack direction="block" gap="tight">
-              <s-heading>{selectedProduct.title}</s-heading>
-              <s-text variant="subdued">
-                {selectedProduct.images?.length || 0} images available
-              </s-text>
-            </s-stack>
-          </s-stack>
-        </s-card>
-      )}
-    </div>
+    <Card>
+      <BlockStack gap="300">
+        <Text variant="headingMd" as="h2">
+          Select Product
+        </Text>
+        
+        <Popover
+          active={isOpen && filteredProducts.length > 0}
+          activator={textFieldActivator}
+          onClose={() => setIsOpen(false)}
+          fullWidth
+        >
+          <ActionList
+            items={filteredProducts.slice(0, 10).map(product => ({
+              content: (
+                <InlineStack gap="200" align="start">
+                  {product.images?.[0] && (
+                    <Thumbnail
+                      source={product.images[0].url}
+                      alt={product.images[0].altText || product.title}
+                      size="small"
+                    />
+                  )}
+                  <BlockStack gap="050">
+                    <Text variant="bodyMd">{product.title}</Text>
+                    <Text variant="bodySm" tone="subdued">{product.vendor || 'No vendor'}</Text>
+                  </BlockStack>
+                </InlineStack>
+              ),
+              onAction: () => handleProductSelect(product)
+            }))}
+          />
+        </Popover>
+
+        {selectedProduct && (
+          <Card background="bg-surface-secondary">
+            <InlineStack gap="200" align="start">
+              {selectedProduct.images?.[0] && (
+                <Thumbnail
+                  source={selectedProduct.images[0].url}
+                  alt={selectedProduct.title}
+                  size="large"
+                />
+              )}
+              <BlockStack gap="100">
+                <Text variant="headingSm">{selectedProduct.title}</Text>
+                <Text tone="subdued">{selectedProduct.vendor || 'No vendor'}</Text>
+                {selectedProduct.description && (
+                  <Text tone="subdued" truncate>
+                    {selectedProduct.description.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                  </Text>
+                )}
+              </BlockStack>
+            </InlineStack>
+          </Card>
+        )}
+      </BlockStack>
+    </Card>
   );
 }
