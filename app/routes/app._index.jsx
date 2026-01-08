@@ -1,13 +1,23 @@
+import {
+  Page,
+  Layout,
+  Card,
+  Text,
+  Button,
+  InlineStack,
+  BlockStack,
+  Icon,
+  DescriptionList,
+  List,
+} from "@shopify/polaris";
+import { ImageIcon, PlayIcon, MagicIcon } from "@shopify/polaris-icons";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
-  
-  return {
-    shop: session.shop
-  };
+  return { shop: session.shop };
 };
 
 export default function Index() {
@@ -22,126 +32,139 @@ export default function Index() {
   };
 
   return (
-    <s-page heading="AI Ad Creator" subtitle="Create stunning ads from your product images">
-      <s-layout>
-        <s-layout-section>
-          <s-card sectioned>
-            <s-stack direction="block" gap="base">
-              <s-heading variant="headingMd">Welcome to AI Ad Creator</s-heading>
-              <s-text variant="bodyMd">
-                Transform your product images into professional advertising content using Google's advanced AI technology.
-              </s-text>
-              
-              <s-stack direction="inline" gap="base">
-                <s-button primary onClick={() => showToast("Coming soon!")}>
+    <Page
+      title="AI Ad Creator"
+      subtitle="Create stunning ads from your product images"
+    >
+      <Layout>
+        <Layout.Section>
+          <Card padding="400">
+            <BlockStack gap="300">
+              <Text variant="headingMd" as="h2">
+                Welcome to AI Ad Creator
+              </Text>
+              <Text as="p">
+                Transform your product images into professional advertising
+                content using Google’s advanced AI technology.
+              </Text>
+
+              <InlineStack gap="200">
+                <Button primary onClick={() => showToast("Coming soon!")}
+                >
                   Create New Campaign
-                </s-button>
-                <s-button onClick={navigateToCampaigns}>
-                  View Campaigns
-                </s-button>
-                <s-button variant="tertiary" onClick={() => showToast("Feature in development")}>
+                </Button>
+                <Button onClick={navigateToCampaigns}>View Campaigns</Button>
+                <Button
+                  variant="tertiary"
+                  onClick={() => showToast("Feature in development")}
+                >
                   View Analytics
-                </s-button>
-              </s-stack>
-            </s-stack>
-          </s-card>
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
 
-          <s-card sectioned>
-            <s-stack direction="block" gap="base">
-              <s-heading variant="headingMd">Features</s-heading>
-              <s-stack direction="inline" gap="base">
-                <s-card>
-                  <s-card-section>
-                    <s-stack direction="block" gap="tight">
-                      <s-icon source="image" />
-                      <s-text variant="headingSm">Image to Image</s-text>
-                      <s-text variant="bodySm" color="subdued">
-                        Transform product images into professional ad creatives
-                      </s-text>
-                    </s-stack>
-                  </s-card-section>
-                </s-card>
+          <Card padding="400">
+            <BlockStack gap="300">
+              <Text variant="headingMd" as="h2">
+                Features
+              </Text>
 
-                <s-card>
-                  <s-card-section>
-                    <s-stack direction="block" gap="tight">
-                      <s-icon source="play-circle" />
-                      <s-text variant="headingSm">Image to Video</s-text>
-                      <s-text variant="bodySm" color="subdued">
-                        Create engaging video ads from static images
-                      </s-text>
-                    </s-stack>
-                  </s-card-section>
-                </s-card>
+              <InlineStack gap="300" wrap>
+                <Card padding="300">
+                  <BlockStack gap="200">
+                    <Icon source={ImageIcon} />
+                    <Text variant="headingSm" as="h3">
+                      Image to Image
+                    </Text>
+                    <Text tone="subdued">
+                      Transform product images into professional ad creatives
+                    </Text>
+                  </BlockStack>
+                </Card>
 
-                <s-card>
-                  <s-card-section>
-                    <s-stack direction="block" gap="tight">
-                      <s-icon source="magic" />
-                      <s-text variant="headingSm">AI Prompts</s-text>
-                      <s-text variant="bodySm" color="subdued">
-                        Generate perfect prompts with Google Gemini
-                      </s-text>
-                    </s-stack>
-                  </s-card-section>
-                </s-card>
-              </s-stack>
-            </s-stack>
-          </s-card>
-        </s-layout-section>
+                <Card padding="300">
+                  <BlockStack gap="200">
+                    <Icon source={PlayIcon} />
+                    <Text variant="headingSm" as="h3">
+                      Image to Video
+                    </Text>
+                    <Text tone="subdued">
+                      Create engaging video ads from static images
+                    </Text>
+                  </BlockStack>
+                </Card>
 
-        <s-layout-section secondary>
-          <s-card sectioned>
-            <s-stack direction="block" gap="base">
-              <s-heading variant="headingMd">Quick Stats</s-heading>
-              <s-description-list>
-                <s-description-list-item
-                  term="Total Campaigns"
-                  description="0"
-                />
-                <s-description-list-item
-                  term="Images Generated"
-                  description="0"
-                />
-                <s-description-list-item
-                  term="Videos Generated"
-                  description="0"
-                />
-              </s-description-list>
-            </s-stack>
-          </s-card>
+                <Card padding="300">
+                  <BlockStack gap="200">
+                    <Icon source={MagicIcon} />
+                    <Text variant="headingSm" as="h3">
+                      AI Prompts
+                    </Text>
+                    <Text tone="subdued">
+                      Generate perfect prompts with Google Gemini
+                    </Text>
+                  </BlockStack>
+                </Card>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
 
-          <s-card sectioned>
-            <s-stack direction="block" gap="base">
-              <s-heading variant="headingMd">Navigation</s-heading>
-              <s-stack direction="block" gap="tight">
-                <s-button fullWidth onClick={() => window.location.href = "/app"}>
+        <Layout.Section secondary>
+          <Card padding="400">
+            <BlockStack gap="300">
+              <Text variant="headingMd" as="h2">
+                Quick Stats
+              </Text>
+              <DescriptionList
+                items={[
+                  { term: "Total Campaigns", description: "0" },
+                  { term: "Images Generated", description: "0" },
+                  { term: "Videos Generated", description: "0" },
+                ]}
+              />
+            </BlockStack>
+          </Card>
+
+          <Card padding="400">
+            <BlockStack gap="300">
+              <Text variant="headingMd" as="h2">
+                Navigation
+              </Text>
+              <BlockStack gap="200">
+                <Button fullWidth onClick={() => (window.location.href = "/app")}>
                   Dashboard
-                </s-button>
-                <s-button fullWidth onClick={navigateToCampaigns}>
+                </Button>
+                <Button fullWidth onClick={navigateToCampaigns}>
                   Campaigns
-                </s-button>
-                <s-button fullWidth onClick={() => window.location.href = "/app/additional"}>
+                </Button>
+                <Button
+                  fullWidth
+                  onClick={() => (window.location.href = "/app/additional")}
+                >
                   Additional Page
-                </s-button>
-              </s-stack>
-            </s-stack>
-          </s-card>
+                </Button>
+              </BlockStack>
+            </BlockStack>
+          </Card>
 
-          <s-card sectioned>
-            <s-stack direction="block" gap="base">
-              <s-heading variant="headingMd">Getting Started</s-heading>
-              <s-unordered-list>
-                <s-list-item>Set up your Google AI API key</s-list-item>
-                <s-list-item>Select a product with good images</s-list-item>
-                <s-list-item>Choose your target audience</s-list-item>
-                <s-list-item>Generate your first ad!</s-list-item>
-              </s-unordered-list>
-            </s-stack>
-          </s-card>
-        </s-layout-section>
-      </s-layout>
-    </s-page>
+          <Card padding="400">
+            <BlockStack gap="300">
+              <Text variant="headingMd" as="h2">
+                Getting Started
+              </Text>
+              <List type="bullet">
+                <List.Item>Set up your Google AI API key</List.Item>
+                <List.Item>Select a product with good images</List.Item>
+                <List.Item>Choose your target audience</List.Item>
+                <List.Item>Generate your first ad!</List.Item>
+              </List>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 
