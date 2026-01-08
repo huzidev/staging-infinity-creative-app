@@ -1,16 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Session {
@@ -31,4 +25,110 @@ model Session {
   emailVerified Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
+}
+
+model Product {
+  id            String @id @default(cuid())
+  shopifyId     String
+  title         String
+  handle        String?
+  description   String?
+  vendor        String?
+  productType   String?
+  tags          String?
+  shop          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  images        ProductImage[]
+  adCampaigns   AdCampaign[]
+  
+  @@unique([shopifyId, shop])
+}
+
+model ProductImage {
+  id            String @id @default(cuid())
+  shopifyId     String
+  productId     String
+  url           String
+  altText       String?
+  width         Int?
+  height        Int?
+  position      Int?
+  createdAt     DateTime @default(now())
+  
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  adAssets      AdAsset[]
+  
+  @@unique([shopifyId, productId])
+}
+
+model AdCampaign {
+  id            String @id @default(cuid())
+  name          String
+  description   String?
+  productId     String
+  shop          String
+  status        CampaignStatus @default(DRAFT)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  adAssets      AdAsset[]
+}
+
+model AdAsset {
+  id              String @id @default(cuid())
+  campaignId      String
+  sourceImageId   String
+  assetType       AdAssetType
+  status          AssetStatus @default(PENDING)
+  prompt          String?
+  generatedUrl    String?
+  thumbnailUrl    String?
+  duration        Float? // For video assets, duration in seconds
+  width           Int?
+  height          Int?
+  fileSize        BigInt?
+  mimeType        String?
+  googleTaskId    String? // For tracking Google API tasks
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  campaign        AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sourceImage     ProductImage @relation(fields: [sourceImageId], references: [id], onDelete: Cascade)
+}
+
+model AdPrompt {
+  id            String @id @default(cuid())
+  productTitle  String
+  productDesc   String?
+  targetAudience String?
+  tone          String? // casual, professional, exciting, etc.
+  purpose       String? // awareness, conversion, engagement
+  generatedPrompt String
+  shop          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum AdAssetType {
+  IMAGE_TO_IMAGE
+  IMAGE_TO_VIDEO
+}
+
+enum AssetStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
