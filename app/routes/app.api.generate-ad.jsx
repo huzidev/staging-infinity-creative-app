@@ -1,5 +1,5 @@
-import { authenticate } from "../../shopify.server";
-import { googleAI } from "../../services/googleAI";
+import { authenticate } from "../shopify.server";
+import { googleAI } from "../services/googleAI";
 
 export const action = async ({ request }) => {
   const { session } = await authenticate.admin(request);
